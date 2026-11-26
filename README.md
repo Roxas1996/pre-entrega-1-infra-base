@@ -1,20 +1,30 @@
-# Pre-entrega 1: Infraestructura base
+# Pre-entrega 1: Infraestructura base (VPC, IAM y backend remoto)
 
-Terraform desplegado en LocalStack (sin cuenta de AWS). Comandos para PowerShell.
+Infraestructura como código con Terraform, desplegada en LocalStack. No requiere cuenta de AWS.
 
-**Requisitos:** Docker Desktop (8 GB de RAM), Terraform 1.5+, AWS CLI, Python 3.10+, `pip install terraform-local` y un token de LocalStack.
+## Requisitos
+
+- Docker Desktop con al menos 8 GB de RAM
+- Terraform 1.5 o superior
+- AWS CLI v2
+- Python 3.10 o superior y `pip install terraform-local`
+- Cuenta gratuita de LocalStack (plan Hobby)
+
+Los comandos son para PowerShell.
 
 ## Estructura
 
 ```
-environments/dev/    Backend y llamada a los módulos
-modules/network/     VPC, subredes privadas y S3 Gateway Endpoint
+environments/dev/    Llama a los módulos y configura el backend
+modules/network/     VPC, subredes privadas, rutas y S3 Gateway Endpoint
 modules/identity/    Roles y políticas IAM
+docker-compose.yml   LocalStack, PostgreSQL y Flink
+PLAN_OUTPUT.md       Evidencia del despliegue
 ```
 
-## 1. Levantar LocalStack
+## 1. Levantar el entorno
 
-Guarda el token como variable de entorno y abre una terminal nueva:
+Guarda tu token (nunca lo subas al repositorio) y abre una terminal nueva:
 
 ```powershell
 setx LOCALSTACK_AUTH_TOKEN "tu-token"
@@ -22,7 +32,10 @@ setx LOCALSTACK_AUTH_TOKEN "tu-token"
 
 ```powershell
 docker compose up -d
+curl.exe http://localhost:4566/_localstack/health
 ```
+
+El puerto 4566 debe estar libre.
 
 ## 2. Crear el backend
 
@@ -45,21 +58,47 @@ tflocal plan "-out=dev.tfplan"
 tflocal apply dev.tfplan
 ```
 
-## Recursos que se crean (11)
+Resultado esperado: 11 recursos creados.
+
+## Recursos que se crean
 
 | Módulo | Recursos |
 |---|---|
-| network | VPC, 2 subredes privadas en zonas distintas, tabla de rutas, 2 asociaciones, S3 Gateway Endpoint |
-| identity | Rol de procesamiento y rol de auditoría, cada uno con su política |
+| network | 1 VPC, 2 subredes privadas (us-east-1a y us-east-1b), 1 tabla de rutas, 2 asociaciones, 1 S3 Gateway Endpoint |
+| identity | Rol de procesamiento y su política, rol de auditoría y su política |
 
-## Seguridad
+Outputs: `vpc_id`, `private_subnet_ids`, `private_route_table_id`, `s3_endpoint_id`, `processing_role_arn`, `audit_role_arn`.
 
-- Subredes sin Internet Gateway, NAT ni IP pública.
-- Procesamiento: solo `s3:ListBucket`, `s3:GetObject` y `s3:PutObject` sobre `streaming/`.
-- El `"*"` del endpoint (`Principal`) lo exige AWS; el de auditoría se debe a que `ec2:Describe*` no admite un recurso específico.
+## Verificar
+
+```powershell
+aws --endpoint-url=http://localhost:4566 ec2 describe-vpc-endpoints --filters "Name=vpc-endpoint-state,Values=available"
+```
+
+## Decisiones de seguridad
+
+- Las subredes no tienen Internet Gateway, NAT ni IP pública.
+- El rol de procesamiento solo permite `s3:ListBucket`, `s3:GetObject` y `s3:PutObject` sobre el prefijo `streaming/`.
+- El S3 Endpoint solo permite esas acciones sobre el bucket de datos. Usa `Principal: "*"` porque AWS lo exige; el acceso lo limitan los roles IAM.
+- El rol de auditoría es de solo lectura. Las acciones `ec2:Describe*` listadas usan `Resource: "*"` porque no admiten un recurso específico.
+- El bucket del state tiene cifrado, versionado y bloqueo de acceso público.
+- El bucket `pulso-lakehouse-dev` se referencia en las políticas, pero se creará en una próxima entrega.
+
+## Reutilizar para otro entorno
+
+Copiar `environments/dev` a `environments/prod` y cambiar los valores de `terraform.tfvars` y `backend.tf`. Los módulos no cambian.
+
+## Limpieza
+
+```powershell
+cd environments\dev
+tflocal destroy
+cd ..\..
+docker compose down
+```
 
 ## Notas
 
-- Otro entorno: copiar `environments/dev` y cambiar `terraform.tfvars` y `backend.tf`.
-- LocalStack no persiste datos: tras reiniciarlo, repetir el paso 2 y usar `tflocal init -reconfigure`.
-- Se usa `dynamodb_table` (obsoleto) porque la actividad pide locking con DynamoDB.
+- LocalStack Hobby no persiste datos: al reiniciarlo, repetir el paso 2 y usar `tflocal init -reconfigure`.
+- `dynamodb_table` está marcado como obsoleto en Terraform; se usa porque la actividad pide locking con DynamoDB.
+- `tflocal` muestra un aviso de obsolescencia; sigue funcionando.

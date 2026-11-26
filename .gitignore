@@ -1,0 +1,17 @@
+# Terraform: descargas y estado local
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Archivos que genera tflocal
+*_override.tf
+
+# Secretos
+.env
+
+# Datos locales de LocalStack y Flink
+.localstack/
+volume/
+checkpoints/

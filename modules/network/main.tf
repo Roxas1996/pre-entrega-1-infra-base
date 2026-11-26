@@ -41,12 +41,31 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
+# Politica del endpoint: solo estos buckets y estas acciones
+data "aws_iam_policy_document" "s3_endpoint" {
+  statement {
+    sid     = "OnlyDataBuckets"
+    actions = ["s3:ListBucket", "s3:GetObject", "s3:PutObject"]
+    resources = concat(
+      [for name in var.allowed_bucket_names : "arn:aws:s3:::${name}"],
+      [for name in var.allowed_bucket_names : "arn:aws:s3:::${name}/*"],
+    )
+
+    # AWS exige "*" aqui; quien puede acceder lo limitan los roles IAM
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+  }
+}
+
 # Camino interno hacia S3
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${var.region}.s3"
   vpc_endpoint_type = "Gateway"
   route_table_ids   = [aws_route_table.private.id]
+  policy            = data.aws_iam_policy_document.s3_endpoint.json
 
   tags = { Name = "${var.name_prefix}-s3-endpoint" }
 }

@@ -27,3 +27,7 @@ variable "private_subnets" {
     error_message = "Se necesitan al menos 2 subredes en zonas distintas."
   }
 }
+variable "allowed_bucket_names" {
+  description = "Buckets a los que se puede llegar a traves del S3 Endpoint"
+  type        = list(string)
+}

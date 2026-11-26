@@ -8,11 +8,13 @@ Warning: Deprecated Parameter
 
 The parameter "dynamodb_table" is deprecated. Use parameter "use_lockfile"
 instead.
+module.network.data.aws_iam_policy_document.s3_endpoint: Reading...
+module.identity.data.aws_caller_identity.current: Reading...
 module.identity.data.aws_iam_policy_document.processing_trust: Reading...
 module.identity.data.aws_iam_policy_document.processing_s3: Reading...
-module.identity.data.aws_caller_identity.current: Reading...
-module.identity.data.aws_iam_policy_document.processing_trust: Read complete after 0s [id=1237821689]
 module.identity.data.aws_iam_policy_document.processing_s3: Read complete after 0s [id=2873686354]
+module.identity.data.aws_iam_policy_document.processing_trust: Read complete after 0s [id=1237821689]
+module.network.data.aws_iam_policy_document.s3_endpoint: Read complete after 0s [id=1629151202]
 module.identity.data.aws_caller_identity.current: Read complete after 0s [id=000000000000]
 module.identity.data.aws_iam_policy_document.audit_trust: Reading...
 module.identity.data.aws_iam_policy_document.audit_read: Reading...
@@ -323,7 +325,27 @@ Terraform will perform the following actions:
       + ip_address_type       = (known after apply)
       + network_interface_ids = (known after apply)
       + owner_id              = (known after apply)
-      + policy                = (known after apply)
+      + policy                = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = [
+                          + "s3:PutObject",
+                          + "s3:ListBucket",
+                          + "s3:GetObject",
+                        ]
+                      + Effect    = "Allow"
+                      + Principal = "*"
+                      + Resource  = [
+                          + "arn:aws:s3:::pulso-lakehouse-dev/*",
+                          + "arn:aws:s3:::pulso-lakehouse-dev",
+                        ]
+                      + Sid       = "OnlyDataBuckets"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
       + prefix_list_id        = (known after apply)
       + private_dns_enabled   = (known after apply)
       + region                = "us-east-1"
@@ -380,8 +402,8 @@ Warning: Deprecated Parameter
 
 The parameter "dynamodb_table" is deprecated. Use parameter "use_lockfile"
 instead.
-module.identity.aws_iam_role.processing: Creating...
 module.identity.aws_iam_role.audit: Creating...
+module.identity.aws_iam_role.processing: Creating...
 module.network.aws_vpc.this: Creating...
 module.identity.aws_iam_role.audit: Creation complete after 0s [id=pulso-dev-audit-role]
 module.identity.aws_iam_role_policy.audit_read: Creating...
@@ -389,49 +411,49 @@ module.identity.aws_iam_role.processing: Creation complete after 0s [id=pulso-de
 module.identity.aws_iam_role_policy.processing_s3: Creating...
 module.identity.aws_iam_role_policy.audit_read: Creation complete after 0s [id=pulso-dev-audit-role:pulso-dev-audit-read]
 module.identity.aws_iam_role_policy.processing_s3: Creation complete after 0s [id=pulso-dev-processing-role:pulso-dev-processing-s3]
-module.network.aws_vpc.this: Creation complete after 1s [id=vpc-0ea0ee4cdcf317cbc]
+module.network.aws_vpc.this: Creation complete after 0s [id=vpc-abf4a61e3dc395fa5]
 module.network.aws_route_table.private: Creating...
 module.network.aws_subnet.private["us-east-1a"]: Creating...
 module.network.aws_subnet.private["us-east-1b"]: Creating...
-module.network.aws_subnet.private["us-east-1a"]: Creation complete after 0s [id=subnet-46aff7e461d4353a7]
-module.network.aws_subnet.private["us-east-1b"]: Creation complete after 0s [id=subnet-79a8d5502841963f9]
-module.network.aws_route_table.private: Creation complete after 0s [id=rtb-c9b8f8ed07408aaba]
-module.network.aws_route_table_association.private["us-east-1a"]: Creating...
+module.network.aws_subnet.private["us-east-1b"]: Creation complete after 0s [id=subnet-b20a621b29934b26b]
+module.network.aws_subnet.private["us-east-1a"]: Creation complete after 0s [id=subnet-0e97a19c0c4eac619]
+module.network.aws_route_table.private: Creation complete after 1s [id=rtb-a196a0b22abb24c56]
 module.network.aws_route_table_association.private["us-east-1b"]: Creating...
+module.network.aws_route_table_association.private["us-east-1a"]: Creating...
 module.network.aws_vpc_endpoint.s3: Creating...
-module.network.aws_route_table_association.private["us-east-1b"]: Creation complete after 0s [id=rtbassoc-0050de4550a8aa09a]
-module.network.aws_route_table_association.private["us-east-1a"]: Creation complete after 0s [id=rtbassoc-903e4394b22f9e96d]
-module.network.aws_vpc_endpoint.s3: Creation complete after 5s [id=vpce-42f2c6619a31006e4]
+module.network.aws_route_table_association.private["us-east-1a"]: Creation complete after 0s [id=rtbassoc-c3915386cbf2b1ba2]
+module.network.aws_route_table_association.private["us-east-1b"]: Creation complete after 0s [id=rtbassoc-38e54a11ef07cf59b]
+module.network.aws_vpc_endpoint.s3: Creation complete after 5s [id=vpce-324448a1581f0f397]
 
 Apply complete! Resources: 11 added, 0 changed, 0 destroyed.
 
 Outputs:
 
 audit_role_arn = "arn:aws:iam::000000000000:role/pulso-dev-audit-role"
-private_route_table_id = "rtb-c9b8f8ed07408aaba"
+private_route_table_id = "rtb-a196a0b22abb24c56"
 private_subnet_ids = [
-  "subnet-46aff7e461d4353a7",
-  "subnet-79a8d5502841963f9",
+  "subnet-0e97a19c0c4eac619",
+  "subnet-b20a621b29934b26b",
 ]
 processing_role_arn = "arn:aws:iam::000000000000:role/pulso-dev-processing-role"
-s3_endpoint_id = "vpce-42f2c6619a31006e4"
-vpc_id = "vpc-0ea0ee4cdcf317cbc"
+s3_endpoint_id = "vpce-324448a1581f0f397"
+vpc_id = "vpc-abf4a61e3dc395fa5"
 ```
 
-## aws ec2 describe-vpc-endpoints
+## aws ec2 describe-vpc-endpoints (estado available)
 
 ```json
 {
     "VpcEndpoints": [
         {
-            "VpcEndpointId": "vpce-42f2c6619a31006e4",
+            "VpcEndpointId": "vpce-324448a1581f0f397",
             "VpcEndpointType": "Gateway",
-            "VpcId": "vpc-0ea0ee4cdcf317cbc",
+            "VpcId": "vpc-abf4a61e3dc395fa5",
             "ServiceName": "com.amazonaws.us-east-1.s3",
             "State": "available",
-            "PolicyDocument": "{\"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"*\", \"Resource\": \"*\"}]}",
+            "PolicyDocument": "{\"Statement\": [{\"Action\": [\"s3:PutObject\", \"s3:ListBucket\", \"s3:GetObject\"], \"Effect\": \"Allow\", \"Principal\": \"*\", \"Resource\": [\"arn:aws:s3:::pulso-lakehouse-dev/*\", \"arn:aws:s3:::pulso-lakehouse-dev\"], \"Sid\": \"OnlyDataBuckets\"}]}",
             "RouteTableIds": [
-                "rtb-c9b8f8ed07408aaba"
+                "rtb-a196a0b22abb24c56"
             ],
             "SubnetIds": [],
             "Groups": [],
@@ -443,23 +465,23 @@ vpc_id = "vpc-0ea0ee4cdcf317cbc"
             "RequesterManaged": false,
             "NetworkInterfaceIds": [],
             "DnsEntries": [],
-            "CreationTimestamp": "2026-11-26T00:55:36+00:00",
+            "CreationTimestamp": "2026-11-26T01:01:20+00:00",
             "Tags": [
                 {
-                    "Key": "Project",
-                    "Value": "pulso-plataforma-datos"
+                    "Key": "Name",
+                    "Value": "pulso-dev-s3-endpoint"
                 },
                 {
                     "Key": "Environment",
                     "Value": "dev"
                 },
                 {
-                    "Key": "Name",
-                    "Value": "pulso-dev-s3-endpoint"
-                },
-                {
                     "Key": "ManagedBy",
                     "Value": "terraform"
+                },
+                {
+                    "Key": "Project",
+                    "Value": "pulso-plataforma-datos"
                 }
             ],
             "OwnerId": "000000000000"

@@ -5,10 +5,11 @@ locals {
 module "network" {
   source = "../../modules/network"
 
-  name_prefix     = local.name_prefix
-  region          = var.region
-  vpc_cidr        = var.vpc_cidr
-  private_subnets = var.private_subnets
+  name_prefix          = local.name_prefix
+  region               = var.region
+  vpc_cidr             = var.vpc_cidr
+  private_subnets      = var.private_subnets
+  allowed_bucket_names = [var.data_bucket_name]
 }
 
 module "identity" {

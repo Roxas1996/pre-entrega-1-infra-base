@@ -24,7 +24,7 @@ PLAN_OUTPUT.md       Evidencia del despliegue
 
 ## 1. Levantar el entorno
 
-Guarda tu token (nunca lo subas al repositorio) y abre una terminal nueva:
+Guardar token (nunca subir el token al repositorio) y abrir una terminal nueva:
 
 ```powershell
 setx LOCALSTACK_AUTH_TOKEN "tu-token"
